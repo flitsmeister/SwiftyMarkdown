@@ -149,7 +149,7 @@ extension SwiftyMarkdown {
         } else if globalBold, !ignoresDynamicSize, let boldDescriptor = font.fontDescriptor.withSymbolicTraits(.traitBold) {
             font = UIFont(descriptor: boldDescriptor, size: fontSize ?? 0)
         } else if globalBold, ignoresDynamicSize {
-            font = UIFont.systemFont(ofSize: fontSize ?? 0, weight: .heavy)
+            font = UIFont.systemFont(ofSize: fontSize ?? 0, weight: .bold)
         } else if globalItalic, let italicDescriptor = font.fontDescriptor.withSymbolicTraits(.traitItalic) {
             font = UIFont(descriptor: italicDescriptor, size: fontSize ?? 0)
         }
