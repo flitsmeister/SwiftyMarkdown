@@ -267,6 +267,7 @@ If that is not set, then the system default will be used.
 	var previouslyFoundTokens : [Token] = []
 	
 	var applyAttachments = true
+    public var ignoresDynamicSize = false
 	
 	let perfomanceLog = PerformanceLog(with: "SwiftyMarkdownPerformanceLogging", identifier: "Swifty Markdown", log: .swiftyMarkdownPerformance)
 		
@@ -559,16 +560,18 @@ extension SwiftyMarkdown {
             attributes[.underlineStyle] = nil
 			guard let styles = token.characterStyles as? [CharacterStyle] else {
 				continue
-			}
-			if styles.contains(.italic) {
-				attributes[.font] = self.font(for: line, characterOverride: .italic)
-				attributes[.foregroundColor] = self.italic.color
-			}
-			if styles.contains(.bold) {
-				attributes[.font] = self.font(for: line, characterOverride: .bold)
-				attributes[.foregroundColor] = self.bold.color
-			}
-			
+            }
+            if styles.contains(.bold) && styles.contains(.italic) {
+                attributes[.font] = self.font(for: line, characterOverrides: [.bold, .italic])
+                attributes[.foregroundColor] = self.bold.color
+            } else if styles.contains(.bold) {
+                attributes[.font] = self.font(for: line, characterOverride: .bold)
+                attributes[.foregroundColor] = self.bold.color
+            } else if styles.contains(.italic) {
+                attributes[.font] = self.font(for: line, characterOverride: .italic)
+                attributes[.foregroundColor] = self.italic.color
+            }
+            
             if let linkIdx = styles.firstIndex(of: .link), linkIdx < token.metadataStrings.count {
                 attributes[.foregroundColor] = self.link.color
                 attributes[.font] = self.font(for: line, characterOverride: .link)

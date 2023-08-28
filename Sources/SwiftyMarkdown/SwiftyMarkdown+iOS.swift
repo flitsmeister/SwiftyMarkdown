@@ -14,7 +14,11 @@ import UIKit
 extension SwiftyMarkdown {
 	
 	func font( for line : SwiftyLine, characterOverride : CharacterStyle? = nil ) -> UIFont {
-		let textStyle : UIFont.TextStyle
+        font(for: line, characterOverrides: characterOverride == nil ? [] : [characterOverride!])
+    }
+
+    func font( for line : SwiftyLine, characterOverrides : [CharacterStyle]) -> UIFont {
+        let textStyle : UIFont.TextStyle
 		var fontName : String?
 		var fontSize : CGFloat?
 		
@@ -83,7 +87,7 @@ extension SwiftyMarkdown {
 			fontName = body.fontName
 		}
 		
-		if let characterOverride = characterOverride {
+        for characterOverride in characterOverrides {
 			switch characterOverride {
 			case .code:
 				fontName = code.fontName ?? fontName
@@ -118,25 +122,39 @@ extension SwiftyMarkdown {
 				let styleDescriptor = UIFontDescriptor.preferredFontDescriptor(withTextStyle: textStyle)
 				finalSize = styleDescriptor.fontAttributes[.size] as? CGFloat ?? CGFloat(14)
 			}
-			
-			if let customFont = UIFont(name: existentFontName, size: finalSize)  {
-				let fontMetrics = UIFontMetrics(forTextStyle: textStyle)
-				font = fontMetrics.scaledFont(for: customFont)
-			} else {
-				font = UIFont.preferredFont(forTextStyle: textStyle)
-			}
-		} else {
-			font = UIFont.preferredFont(forTextStyle: textStyle)
-		}
-		
-		if globalItalic, let italicDescriptor = font.fontDescriptor.withSymbolicTraits(.traitItalic) {
-			font = UIFont(descriptor: italicDescriptor, size: fontSize ?? 0)
-		}
-		if globalBold, let boldDescriptor = font.fontDescriptor.withSymbolicTraits(.traitBold) {
-			font = UIFont(descriptor: boldDescriptor, size: fontSize ?? 0)
-		}
-		
-		return font
+            
+            if existentFontName.hasPrefix(".SFUI") {
+                let fontMetrics = UIFontMetrics(forTextStyle: textStyle)
+                if ignoresDynamicSize {
+                    font = UIFont.systemFont(ofSize: finalSize)
+                } else {
+                    font = fontMetrics.scaledFont(for: UIFont.systemFont(ofSize: finalSize))
+                }
+            } else if let customFont = UIFont(name: existentFontName, size: finalSize)  {
+                let fontMetrics = UIFontMetrics(forTextStyle: textStyle)
+                if ignoresDynamicSize {
+                    font = customFont
+                } else {
+                    font = fontMetrics.scaledFont(for: customFont)
+                }
+            } else {
+                font = UIFont.preferredFont(forTextStyle: textStyle)
+            }
+        } else {
+            font = UIFont.preferredFont(forTextStyle: textStyle)
+        }
+        
+        if globalItalic, globalBold, let boldItalicDescriptor = font.fontDescriptor.withSymbolicTraits([.traitItalic, .traitBold]) {
+            font = UIFont(descriptor: boldItalicDescriptor, size: fontSize ?? 0)
+        } else if globalBold, !ignoresDynamicSize, let boldDescriptor = font.fontDescriptor.withSymbolicTraits(.traitBold) {
+            font = UIFont(descriptor: boldDescriptor, size: fontSize ?? 0)
+        } else if globalBold, ignoresDynamicSize {
+            font = UIFont.systemFont(ofSize: fontSize ?? 0, weight: .bold)
+        } else if globalItalic, let italicDescriptor = font.fontDescriptor.withSymbolicTraits(.traitItalic) {
+            font = UIFont(descriptor: italicDescriptor, size: fontSize ?? 0)
+        }
+        
+        return font
 		
 	}
 	
